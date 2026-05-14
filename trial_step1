@@ -1,0 +1,37 @@
+%MATLAB can move the robot and receive odom, IMU, and GPS messages.
+clear
+clc
+
+setenv("ROS_DOMAIN_ID","0") %Use the same ROS_DOMAIN_ID in CoppeliaSim
+node = ros2node("/matlab_localization_node");
+ros2 topic list
+%/cmd_vel
+% /odom
+% /imu
+% /gps
+% /clock
+ros2 topic info /gps
+cmdPub = ros2publisher(node, "/cmd_vel", "geometry_msgs/Twist");
+odomSub = ros2subscriber(node, "/odom");
+imuSub  = ros2subscriber(node, "/imu");
+gpsSub  = ros2subscriber(node, "/gps");
+
+cmdMsg = ros2message(cmdPub);
+
+cmdMsg.linear.x = 0.2;
+cmdMsg.angular.z = 0.0;
+send(cmdPub, cmdMsg);
+
+pause(2)
+
+odomMsg = receive(odomSub, 5);
+imuMsg  = receive(imuSub, 5);
+gpsMsg  = receive(gpsSub, 5);
+
+cmdMsg.linear.x = 0.0;
+cmdMsg.angular.z = 0.0;
+send(cmdPub, cmdMsg);
+
+disp(odomMsg)
+disp(imuMsg)
+disp(gpsMsg)
