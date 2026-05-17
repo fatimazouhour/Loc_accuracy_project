@@ -9,7 +9,7 @@ dt =  0.05; % sampling time is 1s & CoppeliaSim's default physics dt is 50 ms; m
 ipAddress = '127.0.0.1' ; % local host
 port= 19999; % default Api
 
-%% from manufacturers data cheat 
+%% from manufacturers data sheet 
 wheelRadius= 0.0975; %m
 wheelBase = 0.381 ; % dist between both wheels
 
@@ -20,7 +20,7 @@ speed = 0.2;
 
 %% artificial sensor noise
 
-noise_accel= 0.003; % consistent with Mpu-9150 datacheat mentioned in the paper
+noise_accel= 0.003; % consistent with Mpu-9150 data sheet mentioned in the paper
 noise_gyro= 0.005; % ...  
 noise_odo_x = 0.2;   % the paper reflects the REAL pioneer 
 noise_odo_y= 0.02;
