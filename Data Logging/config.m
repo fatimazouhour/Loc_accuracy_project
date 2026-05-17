@@ -31,5 +31,5 @@ noise_gps = 0.3161; %consistent with  uBlox NEO-6m datasheet
 g= 9.81;
 
 %% output data collection 
-dataDir= '.data';
+dataDir= './data';
 dataFile= 'sensor.mat';
