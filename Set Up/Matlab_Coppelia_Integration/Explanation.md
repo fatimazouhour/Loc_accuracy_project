@@ -32,11 +32,14 @@ In the lua of GPS you can see those lines:
     sim.setFloatSignal('gpsY', objectAbsolutePosition[2])
     sim.setFloatSignal('gpsZ', objectAbsolutePosition[3])
 In those lines, we are getting the true position of the robot from the simulation directly and then adding random variable for the position to represent the noise and uncertainty of a generic GPS.
+
 After that we have also set the objectAbsolutePosition element as floating signals named gpsX, gpsY, gpsZ to be recognizable for matlab through API.
+
 Other than setting the float signal lines, the lines are the default from CoppeliaSim.
 
 ### GyroSensor Lua
 For Gyroscope, you have to go to the components file in the 'Model browser' panel, and then to 'sensors' file and then drag the Gyrosensor sensor to the PioneerP3DX component in 'Scene hierarchy' panel. 
+
 After you add the GyroSensor, navigate to the GyroSensor component inside the PioneerP3DX, and change the GyroSensor lua C++ script to be the one attached here in the file.
 
 In the script of GyroSensor you can see those lines:
@@ -50,12 +53,15 @@ In the script of GyroSensor you can see those lines:
     sim.setFloatSignal('yaw', gyroData[3])
 
 In this sequence of lines, we get the euler angles from the multiple of matrices between the angles and the transformationMatric and then we define the gyroData as the euler derivates. 
+
 After than we set the roll, pitch, yaw angles from the gyroData as float signals to be recognizable by matlab through API.
+
 Other than setting the float signal lines, the lines are the default from CoppeliaSim.
 
 ### Accelerometer Lua
 
 For Accelerometer, you have to go to the components file in the 'Model browser' panel, and then to 'sensors' file and then drag the Accelerometer sensor to the PioneerP3DX component in 'Scene hierarchy' panel. 
+
 After you add the Accelerometer, navigate to the Accelerometer component inside the PioneerP3DX, and change the Accelerometer lua C++ script to be the one attached here in the file.
 
 In the script of Accelerometer you can see those lines:
@@ -66,11 +72,14 @@ In the script of Accelerometer you can see those lines:
         sim.setFloatSignal('accelZ', accel[3])
 
 In those lines, the data coming from the Accelerometer sensor is the division between the forces on the three axes given by the simulation directly, and then divided by the mass, resulting at the end the acceleration.
+
 After calculating the accelX = accele[1], accelY = accel[2], accelZ = accel[3], now we set the values as floating signals to be recognizable by matlab through API.
+
 Other than setting the float signal lines, the lines are the default from CoppeliaSim.
 
 ## Matlab Setup
 
 The matlab script can be summarized as a forloop in which for each iteration it gives a command to the left and right wheels of the CoppeliaSim (if they are the same the robot will move forward or backwards, if they are different the robot will move in a circle), and in the same forloop we get data, such as the odometer, the accelerometer data, gyroscope data, and GPS data.
+
 Thanks to API, whenever we run the matlab code, the robot in CoppeliaSim will run directly. When you stop the Matlab script, the robot will still be moving, then you have to stop the simulation from CoppeliaSim manually.
 !!Note that at the beginning of the Matlab script, there is an addpath that I have used on my laptop. In our case, you have to addpath the CoppeliaSim_Edu_V4_10_0_rev0_Ubuntu22_04/programming/zmqRemoteApi/clients/matlab file wherever it was.
