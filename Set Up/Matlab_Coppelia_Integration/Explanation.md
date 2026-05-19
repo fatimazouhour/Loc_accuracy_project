@@ -6,7 +6,11 @@ We are currently working on the API as the middleware between CoppeliaSim and Ma
 
 
 ### Pioneer Lua
-In the Pioneer lua we have constructed a C++ in such a way that we can keep the robot static (do not move when we run the code from CoppeliaSim)
+In the Pioneer lua we have constructed a C++ in such a way that we can keep the robot static (do not move when we run the code from CoppeliaSim).
+In addition to that we have used those two lines:
+    sim.setFloatSignal("leftEncoder", leftEncoder)
+    sim.setFloatSignal("rightEncoder", rightEncoder)
+in order to set the leftEncoder and rightEncoder at floating signals that will be recognizable for matlab through API
 
 
 ### Running
