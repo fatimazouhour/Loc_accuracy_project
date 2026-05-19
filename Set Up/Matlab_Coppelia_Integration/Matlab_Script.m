@@ -1,7 +1,8 @@
 clc;
 clear;
 
-addpath('/home/husain5/Downloads/CoppeliaSim_Pro_V4_10_0_rev0_Ubuntu22_04/programming/zmqRemoteApi/clients/matlab');
+%adding the matlab file from zmqRemoteApi from the programming file in CoppeliaSim_Edu_V4_10_0_rev0_Ubuntu22_04
+addpath('/home/husain5/Downloads/CoppeliaSim_Edu_V4_10_0_rev0_Ubuntu22_04/programming/zmqRemoteApi/clients/matlab');
 rehash toolboxcache;
 
 client = RemoteAPIClient();
