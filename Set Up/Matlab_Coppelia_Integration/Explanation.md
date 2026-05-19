@@ -1,7 +1,7 @@
 # Integration between Matlab and CoppeliaSim 
 We are currently working on the API as the middleware between CoppeliaSim and Matlab to give commands and get info
 
-## Scene Setup
+## CoppeliaSim Scene Setup
 
 
 
@@ -69,3 +69,8 @@ In those lines, the data coming from the Accelerometer sensor is the division be
 After calculating the accelX = accele[1], accelY = accel[2], accelZ = accel[3], now we set the values as floating signals to be recognizable by matlab through API.
 Other than setting the float signal lines, the lines are the default from CoppeliaSim.
 
+## Matlab Setup
+
+The matlab script can be summarized as a forloop in which for each iteration it gives a command to the left and right wheels of the CoppeliaSim (if they are the same the robot will move forward or backwards, if they are different the robot will move in a circle), and in the same forloop we get data, such as the odometer, the accelerometer data, gyroscope data, and GPS data.
+Thanks to API, whenever we run the matlab code, the robot in CoppeliaSim will run directly. When you stop the Matlab script, the robot will still be moving, then you have to stop the simulation from CoppeliaSim manually.
+!!Note that at the beginning of the Matlab script, there is an addpath that I have used on my laptop. In our case, you have to addpath the CoppeliaSim_Edu_V4_10_0_rev0_Ubuntu22_04/programming/zmqRemoteApi/clients/matlab file wherever it was.
