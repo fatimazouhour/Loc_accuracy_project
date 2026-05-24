@@ -1,4 +1,4 @@
-function sensors = readCoppeliaSensors(gt, accelStream, gyroStream, p)
+function sensors = readCoppeliaSensors(gt, accelStream, gyroStream, p) % to be updated
  
 N = size(accelStream, 1);
 
