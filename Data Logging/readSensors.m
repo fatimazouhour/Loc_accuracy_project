@@ -2,7 +2,7 @@ function sensors = readCoppeliaSensors(gt, accelStream, gyroStream, p) % to be u
  
 N = size(accelStream, 1);
 
- 
+ %
 accelB = accelStream;
 accelB(:,1) = accelB(:,1) + parameters.noise_accel + parameters.noise.accel * randn(N,1);
 accelB(:,2) = accelB(:,2) + parameters.bias_accel + p.noise.accel * randn(N,1);
