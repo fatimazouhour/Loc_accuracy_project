@@ -1,12 +1,22 @@
-function sensors = readCoppeliaSensors(gt, accelStream, gyroStream, p) % to be updated
- 
-N = size(accelStream, 1);
+function sensors = readSensors(gt,raw ,parameters) % to be updated
 
- %
-accelB = accelStream;
-accelB(:,1) = accelB(:,1) + parameters.noise_accel + parameters.noise.accel * randn(N,1);
-accelB(:,2) = accelB(:,2) + parameters.bias_accel + p.noise.accel * randn(N,1);
-accelB(:,3) = accelB(:,3)                + p.noise.accel * randn(N,1);
+%gt = ground truth from coppelia sim
+%raw = captured by datalogger
+
+randn('default') % to be checked later (used as exèlained by estimation course professor)
+
+N = numel(gt.t);
+
+% for the accelerometer 
+accelB = raw.accel;
+% we flip the sign because in the sensor it is -9.81
+accelB(:,3)=-accel(:,3);
+
+
+% add gaussian noise with a zero mean value
+accelB(:,1) = accelB(:,1) + parameters.noise_accel * randn(N,1);
+accelB(:,2) = accelB(:,2) +p.noise_accel * randn(N,1);
+accelB(:,3) = accelB(:,3)  + p.noise_accel * randn(N,1);
  
 gyroB        = gyroStream;
 gyroB(:,3)   = gyroB(:,3) + p.bias.gyroZ + p.noise.gyro * randn(N,1);
