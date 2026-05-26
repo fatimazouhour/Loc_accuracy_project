@@ -3,7 +3,7 @@ function sensors = readSensors(gt,raw ,parameters) % to be updated
 %gt = ground truth from coppelia sim
 %raw = captured by datalogger
 
-randn('default') % to be checked later (used as exèlained by estimation course professor)
+rng(0)% to be checked later (used as exèlained by estimation course professor)
 
 N = numel(gt.t);
 
@@ -15,8 +15,8 @@ accelB(:,3)=-accelB(:,3);
 
 % add gaussian noise with a zero mean value
 accelB(:,1) = accelB(:,1) + parameters.noise_accel * randn(N,1);
-accelB(:,2) = accelB(:,2) +p.noise_accel * randn(N,1);
-accelB(:,3) = accelB(:,3)  + p.noise_accel * randn(N,1);
+accelB(:,2) = accelB(:,2) +parameters.noise_accel * randn(N,1);
+accelB(:,3) = accelB(:,3)  + parameters.noise_accel * randn(N,1);
 
 %
 gyroB= raw.gyro;  % bas 3mlna copy to avaod changing raw directly
@@ -31,7 +31,7 @@ gyroB(:, 3) = gyroB(:, 3) + parameters.noise_gyro * randn(N, 1);
 % 
 r= parameters.wheelRadius;
 vx_odo =r*(gt.wheelOmega(:,2)+ gt.wheelOmega(:,1))/2;
-vy = zeros(N,1); % from professors slides for differential drive robots
+vy_odo= zeros(N,1); % from professors slides for differential drive robots
  odoVelB = [ vx_odo + parameters.noise_odo_x * randn(N, 1), vy_odo + parameters.noise_odo_y * randn(N, 1) ];
  
 

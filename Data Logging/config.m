@@ -1,6 +1,9 @@
 %% Basic Parameters
 
-T= 3500 ; % simulation run time
+T= 60 ; % simulation run time 
+
+% sim time for testing sensors = 60 
+% sim time for ann = 3600
 dt =  0.05; % sampling time is 1s & CoppeliaSim's default physics dt is 50 ms; matching it avoids
 %     aliasing between physics steps and sensor reads.
 
@@ -15,7 +18,7 @@ wheelBase = 0.381 ; % dist between both wheels
 
 %% Trajectory parameters
 % we chose to have a circular path ( parameters were chosen arbitrarily) 
-radius= 2;
+radius= 1;
 speed = 0.2;
 
 %% artificial sensor noise
