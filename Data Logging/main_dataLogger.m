@@ -29,7 +29,7 @@ disp('Connected to CoppeliaSim');
 [rc2, leftMotor]= sim.simxGetObjectHandle(clientID, '/PioneerP3DX/leftMotor', sim.simx_opmode_blocking);
 [rc3, rightMotor]=sim.simxGetObjectHandle(clientID, '/PioneerP3DX/rightMotor', sim.simx_opmode_blocking);
 
-%%
+%% computing wheel commands for circular trajectory
 
 omega  = speed / radius;                  
 vRight = speed + omega * wheelBase / 2;    
@@ -42,22 +42,29 @@ sim.simxGetObjectPosition(clientID, robot, -1, sim.simx_opmode_streaming);
 sim.simxGetObjectOrientation(clientID, robot, -1, sim.simx_opmode_streaming);
 sim.simxGetObjectVelocity(clientID, robot, sim.simx_opmode_streaming);
 
-%motors
-sim.simxGetJointPosition(clientID, leftMotor, sim.simx_opmode_streaming);
-sim.simxGetJointPosition(clientID, rightMotor, sim.simx_opmode_streaming);
 
-% sensors
+% Wheel angular velocities read directly from physics engine (param 2012)
+sim.simxGetObjectFloatParameter(clientID, leftMotor, 2012, sim.simx_opmode_streaming);
+sim.simxGetObjectFloatParameter(clientID, rightMotor, 2012, sim.simx_opmode_streaming);
+
+% sensors from the coppelia scipts
 sim.simxGetStringSignal(clientID, 'accelData', sim.simx_opmode_streaming);
 sim.simxGetStringSignal(clientID, 'gyroData', sim.simx_opmode_streaming);
 sim.simxGetStringSignal(clientID, 'gpsData', sim.simx_opmode_streaming);
 pause(0.3);
 
-%% start trajectory
+
+%% Code suggested by claude :
+% Quick sanity check on wheel velocity read
+[rc_test, wL_test] = sim.simxGetObjectFloatParameter(clientID, leftMotor, 2012, sim.simx_opmode_buffer);
+fprintf('Wheel velocity test: wL = %.4f rad/s (rc=%d), expected ~%.4f\n', wL_test, rc_test, wLeft);
+
+%%start trajectory
 sim.simxSetJointTargetVelocity(clientID, leftMotor, wLeft, sim.simx_opmode_oneshot);
 sim.simxSetJointTargetVelocity(clientID, rightMotor, wRight, sim.simx_opmode_oneshot);
 
 
-% initiazlization 
+%% initiazlization 
 N = round(T/dt);
 gt.t= zeros(N,1);
 gt.posW= zeros(N,3);
@@ -69,11 +76,6 @@ raw.accel= zeros(N,3);
 raw.gyro= zeros(N,3);
 raw.gps= zeros(N,3);
 
-prevLeft  = 0;
-prevRight = 0;
-firstRead = true;
-
-
 %% main loop
 
 % Main logging loop
@@ -82,20 +84,11 @@ for k = 1:N
     [~, pos]= sim.simxGetObjectPosition(clientID, robot, -1, sim.simx_opmode_buffer);
     [~, eul] = sim.simxGetObjectOrientation(clientID, robot, -1, sim.simx_opmode_buffer);
     [~, linV, angV] = sim.simxGetObjectVelocity(clientID, robot, sim.simx_opmode_buffer);
-    [~, jL]= sim.simxGetJointPosition(clientID, leftMotor, sim.simx_opmode_buffer);
-    [~, jR]= sim.simxGetJointPosition(clientID, rightMotor, sim.simx_opmode_buffer);
+    % wheel from phys engine
 
-    % Compute wheel angular velocity by finite difference 
-    if firstRead
-        wL = 0;
-        wR = 0;
-        firstRead = false;
-    else
-        wL = wrapToPi(jL - prevLeft)  / dt;
-        wR = wrapToPi(jR - prevRight) / dt;
-    end
-    prevLeft  = jL;
-    prevRight = jR;
+    [~, wL] = sim.simxGetObjectFloatParameter(clientID, leftMotor,  2012, sim.simx_opmode_buffer);
+    [~, wR] = sim.simxGetObjectFloatParameter(clientID, rightMotor, 2012, sim.simx_opmode_buffer);
+   
 
     % Read sensor signals from CoppeliaSim
     [~, aStr] = sim.simxGetStringSignal(clientID, 'accelData', sim.simx_opmode_buffer);
@@ -107,30 +100,29 @@ for k = 1:N
     pv = sim.simxUnpackFloats(pStr);
 
   
-    gt.t(k)            = (k-1) * dt;
-    gt.posW(k,:)       = pos(:)';
-    gt.eulW(k,:)       = eul(:)';
-    gt.linVelW(k,:)    = linV(:)';
-    gt.angVelW(k,:)    = angV(:)';
-    gt.wheelOmega(k,:) = [wL, wR];
+    gt.t(k)= (k-1) * dt;
+    gt.posW(k,:)= pos(:)';
+    gt.eulW(k,:)= eul(:)';
+    gt.linVelW(k,:)= linV(:)';
+    gt.angVelW(k,:)= angV(:)';
+    gt.wheelOmega(k,:)=[wL, wR];
 
-    if numel(a)  >= 3, raw.accel(k,:) = a(1:3);  end
-    if numel(gv) >= 3, raw.gyro(k,:)  = gv(1:3); end
-    if numel(pv) >= 3, raw.gps(k,:)   = pv(1:3); end
+    if numel(a)>= 3,raw.accel(k,:) = a(1:3);  end
+    if numel(gv)>= 3,raw.gyro(k,:)  = gv(1:3); end
+    if numel(pv)>= 3,raw.gps(k,:)   = pv(1:3); end
 
-    pause(dt);
+   pause(dt);
 end
 
 
 %%
-% stop motor 
-sim.simxSetJointTargetVelocity(clientID, leftMotor, 0, sim.simx_opmode_oneshot);
+% stop motor and disconnect 
+sim.simxSetJointTargetVelocity(clientID, leftMotor,  0, sim.simx_opmode_oneshot);
 sim.simxSetJointTargetVelocity(clientID, rightMotor, 0, sim.simx_opmode_oneshot);
-
-% disconnect
 sim.simxFinish(clientID);
 sim.delete();
 disp('Done logging');
+
 
 % save everything 
 sensors = readSensors(gt, raw, parameters);

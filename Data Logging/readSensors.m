@@ -23,9 +23,9 @@ gyroB= raw.gyro;  % bas 3mlna copy to avaod changing raw directly
 
 
 % add noise
-gyroB(:, 1) = gyroB(:, 1) + parameters.noise_gyro * randn(N, 1);
-gyroB(:, 2) = gyroB(:, 2) + parameters.noise_gyro * randn(N, 1);
-gyroB(:, 3) = gyroB(:, 3) + parameters.noise_gyro * randn(N, 1);
+% gyroB(:, 1) = gyroB(:, 1) + parameters.noise_gyro * randn(N, 1);
+% gyroB(:, 2) = gyroB(:, 2) + parameters.noise_gyro * randn(N, 1);
+% gyroB(:, 3) = gyroB(:, 3) + parameters.noise_gyro * randn(N, 1);
  
 
 % 
