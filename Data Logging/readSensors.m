@@ -23,16 +23,16 @@ gyroB= raw.gyro;  % bas 3mlna copy to avaod changing raw directly
 
 
 % add noise
-% gyroB(:, 1) = gyroB(:, 1) + parameters.noise_gyro * randn(N, 1);
-% gyroB(:, 2) = gyroB(:, 2) + parameters.noise_gyro * randn(N, 1);
-% gyroB(:, 3) = gyroB(:, 3) + parameters.noise_gyro * randn(N, 1);
+gyroB(:, 1) = gyroB(:, 1) + parameters.noise_gyro * randn(N, 1);
+gyroB(:, 2) = gyroB(:, 2) + parameters.noise_gyro * randn(N, 1);
+gyroB(:, 3) = gyroB(:, 3) + parameters.noise_gyro * randn(N, 1);
  
 
 % 
 r= parameters.wheelRadius;
 vx_odo =r*(gt.wheelOmega(:,2)+ gt.wheelOmega(:,1))/2;
 vy_odo= zeros(N,1); % from professors slides for differential drive robots
- odoVelB = [ vx_odo + parameters.noise_odo_x * randn(N, 1), vy_odo + parameters.noise_odo_y * randn(N, 1) ];
+odoVelB = [ vx_odo + parameters.noise_odo_x * randn(N, 1), vy_odo + parameters.noise_odo_y * randn(N, 1) ];
  
 
  % NOTE: gps already in 
