@@ -6,7 +6,6 @@ addpath('..');
 config;
 load(fullfile(dataDir, dataFile));
 
-sensors = readSensors(gt, raw, parameters);
 
 N  = numel(sensors.t);
 dt = parameters.dt;
