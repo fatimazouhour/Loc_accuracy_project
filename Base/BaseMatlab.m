@@ -6,9 +6,17 @@ close all;
 rng(0); 
 
 % --- COPPELIASIM SETUP ---
-addpath('/home/husain5/Documents/CoppeliaSim/CoppeliaSim_Edu_V4_10_0_rev0_Ubuntu22_04/programming/zmqRemoteApi/clients/matlab');
-rehash toolboxcache;
+% uncomment/ comment the needed paths
 
+%% HUSSEIN
+
+%addpath('/home/husain5/Documents/CoppeliaSim/CoppeliaSim_Edu_V4_10_0_rev0_Ubuntu22_04/programming/zmqRemoteApi/clients/matlab');
+%rehash toolboxcache;
+%%  FATIMA
+
+addpath(genpath('C:\Program Files\CoppeliaRobotics\CoppeliaSimEdu\programming\zmqRemoteApi\clients\matlab'));
+
+%%
 client = RemoteAPIClient();
 sim = client.require('sim');
 
@@ -77,6 +85,10 @@ odom_y_hist = zeros(1, total_steps);
 ins_x_hist = zeros(1, total_steps);
 ins_y_hist = zeros(1, total_steps);
 
+accelX_hist = zeros(1, total_steps);
+accelY_hist = zeros(1, total_steps);
+gyro_r_hist = zeros(1, total_steps);
+
 previousleftEncoder = sim.getJointPosition(leftMotor);
 previousrightEncoder = sim.getJointPosition(rightMotor);
 
@@ -129,10 +141,14 @@ while sim.getSimulationTime() < simulationiteration
     end
     
     % Subtract the stationary bias to calibrate the IMU
-    accelX = raw_accelX + noise_accel * randn();
-    accelY = raw_accelY + noise_accel * randn();
-    accelZ = raw_accelZ + noise_accel * randn();
-    accel = [accelX, accelY, accelZ];
+    %accelX = raw_accelX + noise_accel * randn();  
+    %accelY = raw_accelY + noise_accel * randn();
+
+    %wasnt subtracted technically
+   accelX = (raw_accelX - bias_accelX) + noise_accel * randn();
+   accelY = (raw_accelY - bias_accelY) + noise_accel * randn();
+   accelZ = raw_accelZ + noise_accel * randn();
+   accel = [accelX, accelY, accelZ];
 
     %--------------------------- INS ALGORITHM --------------------------
     theta_ins_new = theta_ins_previous - (gyro_r * dt);
@@ -201,6 +217,10 @@ while sim.getSimulationTime() < simulationiteration
     ins_x_hist(step_idx) = x_ins_new;
     ins_y_hist(step_idx) = y_ins_new;
 
+    accelX_hist(step_idx) = accelX;   % BODY-frame accel x (after noise)
+    accelY_hist(step_idx) = accelY;   % BODY-frame accel y (after noise)
+    gyro_r_hist(step_idx) = gyro_r;   % yaw RATE (rad/s
+
     % --- State Updates ---
     previousrightEncoder = newrightEncoder;
     previousleftEncoder = newleftEncoder;
@@ -238,6 +258,10 @@ odom_y_hist = odom_y_hist(1:step_idx-1);
 ins_x_hist = ins_x_hist(1:step_idx-1);
 ins_y_hist = ins_y_hist(1:step_idx-1);
 
+accelX_hist = accelX_hist(1:step_idx-1);
+accelY_hist = accelY_hist(1:step_idx-1);
+gyro_r_hist = gyro_r_hist(1:step_idx-1);
+
 % --- Successive Regression (Savitzky-Golay Filter) ---
 window_size = 50; 
 gps_x_successive = smoothdata(gps_x_hist, 'sgolay', window_size);
@@ -265,3 +289,7 @@ title('Raw Independent Data: GPS vs. Odometry vs. INS');
 % Legend explicitly matching the order of the plot commands above
 legend('True Path', 'Odometry (Drifting)', 'GPS Raw (Noisy)', 'GPS Smoothed (Savitzky-Golay)', 'INS (Calibrated Double Integration)');
 axis equal;
+
+%% save all data to be usable
+save('kf_input.mat', 'time_hist', 'true_x_hist', 'true_y_hist', ...
+     'gps_x_hist', 'gps_y_hist', 'accelX_hist', 'accelY_hist', 'gyro_r_hist');
