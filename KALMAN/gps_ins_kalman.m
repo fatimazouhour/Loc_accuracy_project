@@ -23,7 +23,8 @@ q = size(C,1);
 noise_gps = 0.3162;  % GPS std [m] (paper value)
 V1  = diag([1e-4, 1e-4, 1e-2, 1e-2]);     % tune: pos small, vel larger
 V2  = diag([noise_gps^2, noise_gps^2]);
-V12 = zeros(n,q);
+V12 = zeros(n,q); % covar matrix set to zero since technically ma by2asro 3 b3d 
+
 
 yaw     = 0;
 yawSign = -1;          % matches BaseMatlab theta - gyro_r*dt; flip if mirrored
