@@ -11,6 +11,8 @@ acc  = [S.accelX_hist(:).'; S.accelY_hist(:).'];
 gyro_r = S.gyro_r_hist(:).';
 truth = [S.true_x_hist(:).'; S.true_y_hist(:).'];
 N  = numel(time);
+gps_available = S.gps_available;
+
 if N > 1 
     dt = median(diff(time));
 else
@@ -38,7 +40,7 @@ H = [1 0 0 0 0; 0 1 0 0 0];
 u = [acc(1,:); -acc(2,:); gyro_r];
  
 %% gps artificial outage
-gps_available = true(1,N);
+%gps_available = true(1,N);
 %gps_available(round(0.4*N):round(0.4*N)+200) = false;   % example outage
  
 %% ekf loop 

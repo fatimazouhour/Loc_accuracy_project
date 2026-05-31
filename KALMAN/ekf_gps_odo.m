@@ -9,6 +9,7 @@ time  = S.time_hist(:).';
 gps   = [S.gps_x_hist(:).'; S.gps_y_hist(:).'];
 truth = [S.true_x_hist(:).'; S.true_y_hist(:).'];
 N     = numel(time);
+gps_available = S.gps_available;
 
 if N > 1 
     dt = median(diff(time));
@@ -42,9 +43,9 @@ n  = 3;                    % state: [x, y, theta]
 H  = [1 0 0; 0 1 0];      % GPS selects x and y from the state
 
 %% gps artificial outages
-gps_available = true(1, N);
+%gps_available = true(1, N);
 % Uncomment to test a GPS outage (Stage 5):
-% gps_available(round(0.4*N) : round(0.4*N)+200) = false;
+%gps_available(round(0.4*N) : round(0.4*N)+200) = false;
 
 %% initializations (nfs ekf) 
 x      = zeros(n, N);      % posterior (updated) state

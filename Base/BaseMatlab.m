@@ -275,6 +275,13 @@ window_size = 50;
 gps_x_successive = smoothdata(gps_x_hist, 'sgolay', window_size);
 gps_y_successive = smoothdata(gps_y_hist, 'sgolay', window_size);
 
+%Outages uncomment last line to have it 
+N_steps = numel(time_hist);
+gps_available = true(1, N_steps);
+gps_available(round(0.4*N_steps) : round(0.4*N_steps)+200) = false;  % outage window
+
+
+
 % --- Plotting Results ---
 figure('Name', 'Robot Localization: Raw Sensor Data', 'NumberTitle', 'off');
 hold on; grid on;
@@ -300,4 +307,4 @@ axis equal;
 
 %% save all data to be usable
 save('kf_input.mat', 'time_hist', 'true_x_hist', 'true_y_hist','gps_x_hist', 'gps_y_hist', 'accelX_hist', 'accelY_hist', 'gyro_r_hist', 'odom_w_hist','odom_v_hist','initial_heading', ...
-     'odom_x_hist', 'odom_y_hist', 'ins_x_hist', 'ins_y_hist');
+     'odom_x_hist', 'odom_y_hist', 'ins_x_hist', 'ins_y_hist','gps_available');

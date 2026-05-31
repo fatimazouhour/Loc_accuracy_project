@@ -1,4 +1,4 @@
-classdef RobotANN < handle
+classdef RobotANN_Class < handle
     properties
         net
         is_trained = false
@@ -7,7 +7,7 @@ classdef RobotANN < handle
     end
     
     methods
-        function obj = RobotANN(nInputs)
+        function obj = RobotANN_Class(nInputs)
             if nargin < 1
                 nInputs = 10; % Eq. (3) input vector
             end
@@ -19,6 +19,9 @@ classdef RobotANN < handle
             obj.net.layers{1}.transferFcn = 'logsig';
             obj.net.layers{2}.transferFcn = 'logsig';
             obj.net.layers{3}.transferFcn = 'purelin';
+            
+            assert(any(strcmp(obj.net.inputs{1}.processFcns,'mapminmax')), ...
+                'Input normalization (mapminmax) missing -> logsig will saturate.');
 
             % Quasi-Newton / secant-like training
             obj.net.trainFcn = 'trainoss';
@@ -48,9 +51,21 @@ classdef RobotANN < handle
 
             obj.is_trained = true;
 
-            if tr.bestPerf > obj.net.trainParam.goal
-                warning('Training finished, but RMSE goal was not fully reached.');
+           % if tr.bestPerf > obj.net.trainParam.goal
+            %    warning('Training finished, but RMSE goal was not fully reached.');
+            %end
+            if isfield(tr,'best_perf') 
+                bp = tr.best_perf;
+            elseif isfield(tr,'bestPerf')
+                bp = tr.bestPerf;
+            else
+                bp = NaN;
             end
+
+             if isnan(bp) || bp > obj.net.trainParam.goal
+              warning('Training finished but MSE goal (%.0e) not reached.', obj.net.trainParam.goal);
+             end
+
         end
 
         function pos_pred = predict(obj, sensor_data)
