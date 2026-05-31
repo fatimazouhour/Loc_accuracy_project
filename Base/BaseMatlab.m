@@ -140,7 +140,6 @@ while sim.getSimulationTime() < simulationiteration
         raw_accelX = 0; raw_accelY = 0; raw_accelZ = 0;
     end
     
-    % Subtract the stationary bias to calibrate the IMU
     %accelX = raw_accelX + noise_accel * randn();  
     %accelY = raw_accelY + noise_accel * randn();
 
