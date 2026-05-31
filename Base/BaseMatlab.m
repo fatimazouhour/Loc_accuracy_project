@@ -10,11 +10,11 @@ rng(0);
 
 %% HUSSEIN
 
-%addpath('/home/husain5/Documents/CoppeliaSim/CoppeliaSim_Edu_V4_10_0_rev0_Ubuntu22_04/programming/zmqRemoteApi/clients/matlab');
-%rehash toolboxcache;
+addpath('/home/husain5/Documents/CoppeliaSim/CoppeliaSim_Edu_V4_10_0_rev0_Ubuntu22_04/programming/zmqRemoteApi/clients/matlab');
+rehash toolboxcache;
 %%  FATIMA
 
-addpath(genpath('C:\Program Files\CoppeliaRobotics\CoppeliaSimEdu\programming\zmqRemoteApi\clients\matlab'));
+%addpath(genpath('C:\Program Files\CoppeliaRobotics\CoppeliaSimEdu\programming\zmqRemoteApi\clients\matlab'));
 
 %%
 client = RemoteAPIClient();
@@ -26,7 +26,7 @@ rightMotor = sim.getObject('/PioneerP3DX/rightMotor');
 
 % Simulation Parameters
 dt = 0.05;
-simulationiteration = 30; 
+simulationiteration = 100; 
 total_steps = ceil(simulationiteration / dt); 
 
 % ENABLE SYNCHRONOUS MODE for perfect timing
@@ -154,17 +154,17 @@ while sim.getSimulationTime() < simulationiteration
    accel = [accelX, accelY, accelZ];
 
     %--------------------------- INS ALGORITHM --------------------------
-    theta_ins_new = theta_ins_previous - (gyro_r * dt);
-    
-    accel_body_x = accel(1); % Sensor's X is pointing Forward
+    theta_ins_new = (theta_ins_previous + (gyro_r * dt));
+
+    accel_body_x = -accel(1); % Sensor's X is pointing Forward
     accel_body_y = -accel(2); % Sensor's Y is pointing Lateral
-    
+
     accel_global_x = accel_body_x * cos(theta_ins_new) - accel_body_y * sin(theta_ins_new);
     accel_global_y = accel_body_x * sin(theta_ins_new) + accel_body_y * cos(theta_ins_new);
-    
+
     vx_ins_new = vx_ins_previous + (accel_global_x * dt);
     vy_ins_new = vy_ins_previous + (accel_global_y * dt);
-    
+
     x_ins_new = x_ins_previous + (vx_ins_new * dt);
     y_ins_new = y_ins_previous + (vy_ins_new * dt);
 
@@ -182,7 +182,7 @@ while sim.getSimulationTime() < simulationiteration
 
     distanceleft = wheelRadius * deltaleft;
     distanceright = wheelRadius * deltaright;
-    
+  
     if rand() < slip_probability
         slip_inflation_L = 1.2 + (0.3 * rand()); 
         distanceleft = distanceleft * slip_inflation_L;
@@ -298,6 +298,36 @@ title('Raw Independent Data: GPS vs. Odometry vs. INS');
 % Legend explicitly matching the order of the plot commands above
 legend('True Path', 'Odometry (Drifting)', 'GPS Raw (Noisy)', 'GPS Smoothed (Savitzky-Golay)', 'INS (Calibrated Double Integration)');
 axis equal;
+
+% --- Plot X components vs Time ---
+figure('Name', 'X Position vs Time', 'NumberTitle', 'off');
+hold on; grid on;
+
+plot(time_hist, true_x_hist,        'k-',  'LineWidth', 2);
+scatter(time_hist, gps_x_hist,      10, 'r', 'filled', 'MarkerFaceAlpha', 0.5);
+plot(time_hist, gps_x_successive,   'g-',  'LineWidth', 2);
+plot(time_hist, odom_x_hist,        'b--', 'LineWidth', 1.5);
+plot(time_hist, ins_x_hist,         'c-',  'LineWidth', 1.5);
+
+xlabel('Time (s)');
+ylabel('X Position (meters)');
+title('X Position vs Time: GPS vs Odometry vs INS');
+legend('True X', 'GPS Raw', 'GPS Smoothed', 'Odometry', 'INS');
+
+% --- Plot Y components vs Time ---
+figure('Name', 'Y Position vs Time', 'NumberTitle', 'off');
+hold on; grid on;
+
+plot(time_hist, true_y_hist,        'k-',  'LineWidth', 2);
+scatter(time_hist, gps_y_hist,      10, 'r', 'filled', 'MarkerFaceAlpha', 0.5);
+plot(time_hist, gps_y_successive,   'g-',  'LineWidth', 2);
+plot(time_hist, odom_y_hist,        'b--', 'LineWidth', 1.5);
+plot(time_hist, ins_y_hist,         'c-',  'LineWidth', 1.5);
+
+xlabel('Time (s)');
+ylabel('Y Position (meters)');
+title('Y Position vs Time: GPS vs Odometry vs INS');
+legend('True Y', 'GPS Raw', 'GPS Smoothed', 'Odometry', 'INS');
 
 %% save all data to be usable
 save('kf_input.mat', 'time_hist', 'true_x_hist', 'true_y_hist','gps_x_hist', 'gps_y_hist', 'accelX_hist', 'accelY_hist', 'gyro_r_hist', 'odom_w_hist','odom_v_hist','initial_heading', ...
