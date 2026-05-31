@@ -1,0 +1,82 @@
+%GPS PRESENT
+if gpsAvailable && ~ann.is_trained
+%% ANN TRAINING DATA
+% Each signal is a time history.
+% Rows = time samples k = 1...N.
+
+annData.accel = sensors.accelB;
+% IMU accelerometer matrix, size N x 3
+% sensors.accelB(:,1) -> ax history [m/s^2]
+% sensors.accelB(:,2) -> ay history [m/s^2]
+% sensors.accelB(:,3) -> az history [m/s^2]
+
+annData.vel = vel_ins;
+% INS velocity matrix received from sensor-processing code, size N x 2
+% vel_ins(:,1) -> vx history [m/s]
+% vel_ins(:,2) -> vy history [m/s]
+
+annData.heading = yaw_ins;
+% Gyroscope-based heading vector, size N x 1
+% yaw_ins(:,1) -> psi/yaw history [rad]
+
+annData.odoVel = sensors.odoVelB;
+% Wheel odometry velocity matrix, size N x 2
+% sensors.odoVelB(:,1) -> vx_odo history [m/s]
+% sensors.odoVelB(:,2) -> vy_odo history [m/s]
+
+%% BUILD ANN INPUT MATRIX
+% X_train is size N x M
+% N = number of time samples
+% M = number of ANN input features created by buildANNInput()
+
+X_train = buildANNInput(annData, parameters.dt);
+
+%% ANN TARGET DATA
+% Target is the fused Kalman Filter position, size N x 2
+% Y_train(:,1) -> x_kf_c history [m]
+% Y_train(:,2) -> y_kf_c history [m]
+
+Y_train = [x_kf_c, y_kf_c];
+%% TRAIN ANN
+% Create ANN object.
+% Number of ANN inputs is automatically taken from X_train columns.
+
+ann = RobotANN_Class(size(X_train, 2));
+
+% Train ANN using:
+% X_train -> sensor-based input features
+% Y_train -> KF fused position target
+
+ann.trainANN(X_train, Y_train);
+
+%% SAVE TRAINED ANN
+% Save the trained ANN so it can be loaded later during GPS outage testing.
+
+ann.saveModel('trainedANN.mat');
+end
+
+%% ANN VALIDATION
+
+Y_pred = ann.predict(X_train);
+
+rmse = sqrt(mean((Y_pred - Y_train).^2));
+
+fprintf('Training RMSE (x,y) = %.6f %.6f\n', rmse(1), rmse(2));
+
+
+%% GPS OUTAGE CASE
+% When GPS is unavailable, use the trained ANN to predict position.
+
+load('trainedANN.mat', 'ann');
+
+% Build ANN input for the GPS outage interval
+% annData_outage must contain the same fields as annData:
+% accel, vel, heading, odoVel
+
+X_outage = buildANNInput(annData_outage, parameters.dt);
+
+% ANN predicted position during GPS outage
+pos_ann = ann.predict(X_outage);
+
+% pos_ann(:,1) -> predicted x position [m]
+% pos_ann(:,2) -> predicted y position [m]
