@@ -51,9 +51,6 @@ classdef RobotANN_Class < handle
 
             obj.is_trained = true;
 
-           % if tr.bestPerf > obj.net.trainParam.goal
-            %    warning('Training finished, but RMSE goal was not fully reached.');
-            %end
             if isfield(tr,'best_perf') 
                 bp = tr.best_perf;
             elseif isfield(tr,'bestPerf')
@@ -62,9 +59,9 @@ classdef RobotANN_Class < handle
                 bp = NaN;
             end
 
-             if isnan(bp) || bp > obj.net.trainParam.goal
-              warning('Training finished but MSE goal (%.0e) not reached.', obj.net.trainParam.goal);
-             end
+            if isnan(bp) || bp > obj.net.trainParam.goal
+                warning('Training finished but MSE goal (%.0e) not reached.', obj.net.trainParam.goal);
+            end
 
         end
 
@@ -80,5 +77,14 @@ classdef RobotANN_Class < handle
 
             pos_pred = obj.net(sensor_data')';
         end
+
+        function saveModel(obj, filename)
+        % Save trained ANN model
+
+            ann = obj;
+            save(filename, 'ann');
+
+        end
+
     end
 end
