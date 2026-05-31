@@ -28,8 +28,8 @@ yawSign = -1;                    % BaseMatlab INS: theta = theta - gyro_r*dt
  
 %% to be tuned
 sigma_gps    = 0.3162;   % GPS std [m]
-sigma_a_proc = 0.5;      % unmodeled accel uncertainty [m/s^2]  (main knob)
-sigma_w_proc = 0.3;      % unmodeled yaw-rate uncertainty [rad/s]
+sigma_a_proc = 0.8;      % unmodeled accel uncertainty [m/s^2]  (main knob)
+sigma_w_proc = 0.5;      % unmodeled yaw-rate uncertainty [rad/s]
 R  = diag([sigma_gps^2, sigma_gps^2]);
 Qu = diag([sigma_a_proc^2, sigma_a_proc^2, sigma_w_proc^2]);
 

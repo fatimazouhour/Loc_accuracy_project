@@ -32,7 +32,7 @@ end
 % we started with initial values given
 sigma_gps = 0.3162;
 sigma_v   = 0.3317;
-sigma_w   = 0.05;      % <-- tune this first if filter diverges
+sigma_w   = 1;      % <-- tune this first if filter diverges
 
 R  = diag([sigma_gps^2, sigma_gps^2]);   % measurement noise  (GPS positions)
 Qu = diag([sigma_v^2,   sigma_w^2  ]);   % control-input noise ([v, omega])
