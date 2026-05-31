@@ -275,12 +275,6 @@ window_size = 50;
 gps_x_successive = smoothdata(gps_x_hist, 'sgolay', window_size);
 gps_y_successive = smoothdata(gps_y_hist, 'sgolay', window_size);
 
-%Outages uncomment last line to have it 
-N_steps = numel(time_hist);
-gps_available = true(1, N_steps);
-gps_available(round(0.4*N_steps) : round(0.4*N_steps)+200) = false;  % outage window
-
-
 
 % --- Plotting Results ---
 figure('Name', 'Robot Localization: Raw Sensor Data', 'NumberTitle', 'off');
