@@ -41,10 +41,12 @@ wheelBase = 0.381;    % meters
 initial_pose = sim.getObjectPosition(robot, sim.handle_world);
 initial_ori = sim.getObjectOrientation(robot, sim.handle_world);
 
+
 % Odometry Init
 x_odom_previous = initial_pose{1};
 y_odom_previous = initial_pose{2};
 theta_odom_previous = initial_ori{3};
+initial_heading = initial_ori{3};
 
 % INS Init
 x_ins_previous = initial_pose{1};
@@ -82,6 +84,8 @@ gps_x_hist = zeros(1, total_steps);
 gps_y_hist = zeros(1, total_steps);
 odom_x_hist = zeros(1, total_steps);
 odom_y_hist = zeros(1, total_steps);
+odom_v_hist= zeros(1,total_steps);
+odom_w_hist= zeros(1,total_steps);
 ins_x_hist = zeros(1, total_steps);
 ins_y_hist = zeros(1, total_steps);
 
@@ -214,6 +218,9 @@ while sim.getSimulationTime() < simulationiteration
     gps_y_hist(step_idx) = gpsY;
     odom_x_hist(step_idx) = x_odom_new;
     odom_y_hist(step_idx) = y_odom_new;
+    odom_v_hist(step_idx)= v_body_x_noisy;
+    odom_w_hist(step_idx) = deltatheta/dt;
+   
     ins_x_hist(step_idx) = x_ins_new;
     ins_y_hist(step_idx) = y_ins_new;
 
@@ -255,6 +262,8 @@ gps_x_hist = gps_x_hist(1:step_idx-1);
 gps_y_hist = gps_y_hist(1:step_idx-1);
 odom_x_hist = odom_x_hist(1:step_idx-1);
 odom_y_hist = odom_y_hist(1:step_idx-1);
+odom_v_hist=odom_v_hist(1:step_idx-1);
+odom_w_hist=odom_w_hist(1:step_idx-1);
 ins_x_hist = ins_x_hist(1:step_idx-1);
 ins_y_hist = ins_y_hist(1:step_idx-1);
 
@@ -291,5 +300,5 @@ legend('True Path', 'Odometry (Drifting)', 'GPS Raw (Noisy)', 'GPS Smoothed (Sav
 axis equal;
 
 %% save all data to be usable
-save('kf_input.mat', 'time_hist', 'true_x_hist', 'true_y_hist', ...
-     'gps_x_hist', 'gps_y_hist', 'accelX_hist', 'accelY_hist', 'gyro_r_hist');
+save('kf_input.mat', 'time_hist', 'true_x_hist', 'true_y_hist','gps_x_hist', 'gps_y_hist', 'accelX_hist', 'accelY_hist', 'gyro_r_hist', 'odom_w_hist','odom_v_hist','initial_heading', ...
+     'odom_x_hist', 'odom_y_hist', 'ins_x_hist', 'ins_y_hist');
