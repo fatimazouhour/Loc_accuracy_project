@@ -1,0 +1,25 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}System Architecture}{2}{section.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Block diagram of the fusion architecture: sensors feed KF-1 and KF-2; their outputs are combined by the complementary filter while GPS is available; the ANN, trained on this data, replaces GPS during an outage. (Redraw adapting the paper's Fig.~1.)}}{2}{figure.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3}Kalman Filter Models}{2}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}KF-1: GPS + INS}{2}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}KF-2: GPS + odometry}{3}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Complementary fusion}{3}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Neural Network as Pseudo-GPS}{3}{section.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Results}{3}{section.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Raw sensor data: ground truth vs.\ odometry vs.\ raw/smoothed GPS vs.\ INS (from \texttt  {BaseMatlab.m}).}}{4}{figure.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces KF-1 (GPS-INS) estimated trajectory against ground truth.}}{4}{figure.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces KF-2 (GPS-odometry) estimated trajectory against ground truth.}}{4}{figure.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Final fusion during the GPS outage: truth, KF-2 alone, ANN alone, and the ANN+KF-2 blend (from \texttt  {ekf\_ANN\_fusion.m}).}}{5}{figure.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Position RMSE (metres) --- to be filled from the run.}}{5}{table.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Simplifications and Limitations}{5}{section.6}\protected@file@percent }
+\newlabel{sec:limitations}{{6}{5}{Simplifications and Limitations}{section.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Conclusion}{6}{section.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {A}Master run-script}{6}{section.A}\protected@file@percent }
+\newlabel{app:run}{{A}{6}{Master run-script}{section.A}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {1}\texttt  {run\_all.m} --- runs the pipeline in the correct order.}{6}{lstlisting.1}\protected@file@percent }
+\gdef \@abspage@last{6}
