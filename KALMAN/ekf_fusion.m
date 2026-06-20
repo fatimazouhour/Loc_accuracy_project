@@ -70,3 +70,7 @@ plot(truth_x(1), truth_y(1), 'k^', 'MarkerSize', 8, 'MarkerFaceColor', 'y', 'Han
 text(truth_x(1)+0.2, truth_y(1), 'Start', 'FontWeight', 'bold');
 
 hold off;
+
+% Save the fusion result so the ANN training script can find it
+save('fusion_output.mat', 'x_fused', 'y_fused');
+disp('Fusion targets saved for ANN training.');
