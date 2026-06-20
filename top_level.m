@@ -12,7 +12,9 @@ cd(here);
  run('BaseMatlab');     
 run('ekf_gps_ins');      
 run('ekf_gps_odo');      
-run('ekf_fusion');     
+run('ekf_fusion');    
+Y_train = [x_fused(:), y_fused(:)];
+
 % run('ekf_ANN_fusion'); 
 
 disp('finished.');
