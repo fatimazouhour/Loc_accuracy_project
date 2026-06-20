@@ -101,6 +101,8 @@ accelX_hist = zeros(1, total_steps);
 accelY_hist = zeros(1, total_steps);
 gyro_r_hist = zeros(1, total_steps);
 
+gps_available = true(1, total_steps);
+
 previousleftEncoder = sim.getJointPosition(leftMotor);
 previousrightEncoder = sim.getJointPosition(rightMotor);
 
@@ -122,21 +124,17 @@ while sim.getSimulationTime() < simulationiteration
     %======================================================================
     %--------------------------POSITION FROM GPS---------------------------
     % --- GPS Availability Logic ---
+    % We store a true/false value for the current step_idx
     if current_time >= outage_start_time && current_time <= outage_end_time
-        gps_available = false; % GPS signal is OFF
+        gps_available(step_idx) = false; % GPS is OFF for this step
+        gpsX = NaN;                      % Set GPS to NaN during outage
+        gpsY = NaN;
     else
-        gps_available = true;  % GPS signal is ON
-    end
-
-    % --- GPS Signal Generation ---
-    if gps_available
+        gps_available(step_idx) = true;  % GPS is ON for this step
+        % Generate GPS only when available
         gpsX = true_X + noise_gps * randn();
         gpsY = true_Y + noise_gps * randn();
-    else
-        gpsX = NaN; 
-        gpsY = NaN;
     end
-    
 
     %======================================================================
     %==============================GYROSCOPE===============================
