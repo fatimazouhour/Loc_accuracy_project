@@ -89,6 +89,9 @@ odom_w_hist= zeros(1,total_steps);
 ins_x_hist = zeros(1, total_steps);
 ins_y_hist = zeros(1, total_steps);
 
+vx_ins_hist = zeros(1, total_steps);
+vy_ins_hist = zeros(1, total_steps);
+
 accelX_hist = zeros(1, total_steps);
 accelY_hist = zeros(1, total_steps);
 gyro_r_hist = zeros(1, total_steps);
@@ -223,6 +226,9 @@ while sim.getSimulationTime() < simulationiteration
     ins_x_hist(step_idx) = x_ins_new;
     ins_y_hist(step_idx) = y_ins_new;
 
+    vx_ins_hist(step_idx) = vx_ins_new; 
+    vy_ins_hist(step_idx) = vy_ins_new;
+
     accelX_hist(step_idx) = accelX;   % BODY-frame accel x (after noise)
     accelY_hist(step_idx) = accelY;   % BODY-frame accel y (after noise)
     gyro_r_hist(step_idx) = gyro_r;   % yaw RATE (rad/s
@@ -331,4 +337,4 @@ legend('True Y', 'GPS Raw', 'GPS Smoothed', 'Odometry', 'INS');
 
 %% save all data to be usable
 save('kf_input.mat', 'time_hist', 'true_x_hist', 'true_y_hist','gps_x_hist', 'gps_y_hist', 'accelX_hist', 'accelY_hist', 'gyro_r_hist', 'odom_w_hist','odom_v_hist','initial_heading', ...
-     'odom_x_hist', 'odom_y_hist', 'ins_x_hist', 'ins_y_hist','gps_available');
+     'odom_x_hist', 'odom_y_hist', 'ins_x_hist', 'ins_y_hist', 'vx_ins_hist', 'vy_ins_hist', 'gps_available');
