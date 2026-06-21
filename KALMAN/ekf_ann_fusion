@@ -36,8 +36,7 @@ for i = 1:N
         a1_fuzzy = get_fuzzy_alpha(Base.odom_v_hist(i), Base.vx_ins_hist(i)); 
         
         % D. Fuse Estimates (Eq. 5)
-        final(1, i) = a1_fuzzy * pred_pos(1) + (1 - a1_fuzzy) * kf2.pos(1, i);
-        final(2, i) = a1_fuzzy * pred_pos(2) + (1 - a1_fuzzy) * kf2.pos(2, i);
+        final(:, i) = a1_fuzzy * pred_pos(:) + (1 - a1_fuzzy) * kf2.pos(:, i);
     end
 end
 
