@@ -22,7 +22,7 @@ rehash toolboxcache;
 
 %addpath(genpath('C:\Program Files\CoppeliaRobotics\CoppeliaSimEdu\programming\zmqRemoteApi\clients\matlab'));
 % rehash toolboxcache;
-
+%%
 client = RemoteAPIClient();
 sim = client.require('sim');
 
@@ -84,8 +84,9 @@ slip_probability = 0.05;
 
 % --- GPS Outage Configuration ---
 % Suggestion: 20-30 seconds is standard to test filter drift and ANN recovery
-outage_start_time = 40;  % seconds
-outage_end_time = 70;    % seconds
+outage_start_time = 100;  % seconds
+outage_end_time = 150;    % seconds
+
 
 % --- Data Logging Arrays ---
 time_hist = zeros(1, total_steps);
@@ -251,6 +252,7 @@ while sim.getSimulationTime() < simulationiteration
     vx_ins_hist(step_idx) = vx_ins_new; 
     vy_ins_hist(step_idx) = vy_ins_new;
 
+
     accelX_hist(step_idx) = accelX;   % BODY-frame accel x (after noise)
     accelY_hist(step_idx) = accelY;   % BODY-frame accel y (after noise)
     gyro_r_hist(step_idx) = gyro_r;   % yaw RATE (rad/s
@@ -294,15 +296,26 @@ odom_w_hist=odom_w_hist(1:step_idx-1);
 ins_x_hist = ins_x_hist(1:step_idx-1);
 ins_y_hist = ins_y_hist(1:step_idx-1);
 
+vx_ins_hist = vx_ins_hist(1:step_idx-1);
+vy_ins_hist = vy_ins_hist(1:step_idx-1);
+
 accelX_hist = accelX_hist(1:step_idx-1);
 accelY_hist = accelY_hist(1:step_idx-1);
 gyro_r_hist = gyro_r_hist(1:step_idx-1);
 
 % --- Successive Regression (Savitzky-Golay Filter) ---
 window_size = 50; 
-gps_x_successive = smoothdata(gps_x_hist, 'sgolay', window_size);
-gps_y_successive = smoothdata(gps_y_hist, 'sgolay', window_size);
 
+% Identify where GPS data is valid
+valid_idx = ~isnan(gps_x_hist);
+
+% Initialize output arrays with NaNs
+gps_x_successive = NaN(size(gps_x_hist));
+gps_y_successive = NaN(size(gps_y_hist));
+
+% Apply filter only to valid segments
+gps_x_successive(valid_idx) = smoothdata(gps_x_hist(valid_idx), 'sgolay', window_size);
+gps_y_successive(valid_idx) = smoothdata(gps_y_hist(valid_idx), 'sgolay', window_size);
 
 % --- Plotting Results ---
 figure('Name', 'Robot Localization: Raw Sensor Data', 'NumberTitle', 'off');
