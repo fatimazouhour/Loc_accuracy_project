@@ -1,3 +1,4 @@
+function [X_all] = buildANNInput(data, dt)
 % buildANNInput
 %
 % This function builds the ANN input matrix from processed sensor data.
@@ -126,4 +127,4 @@
         cum_vx_odo, ...
         vy_odo, ...
         cum_vy_odo];
-
+end
