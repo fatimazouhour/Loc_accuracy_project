@@ -269,19 +269,8 @@ while sim.getSimulationTime() < simulationiteration
     theta_ins_previous = theta_ins_new;
 
 
-    %sim.setJointTargetVelocity(leftMotor, 5.9);
-    %sim.setJointTargetVelocity(rightMotor, 5.0);
-
-    
-    base_v = 5.0;            % Base speed
-    amp = 1.0;               % Speed variation amplitude
-    freq = 0.05;             % Oscillation frequency (Hz)
-    
-    v_left  = base_v + amp * sin(2 * pi * freq * current_time);
-    v_right = base_v + amp * cos(2 * pi * freq * current_time);
-
-    sim.setJointTargetVelocity(leftMotor, v_left);
-    sim.setJointTargetVelocity(rightMotor, v_right);
+    sim.setJointTargetVelocity(leftMotor, 5.9);
+    sim.setJointTargetVelocity(rightMotor, 5.0);
 
     client.step(); 
     step_idx = step_idx + 1;
