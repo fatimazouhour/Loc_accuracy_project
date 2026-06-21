@@ -10,13 +10,19 @@ rng(0);
 
 %% HUSSEIN
 
-addpath('/home/husain5/Documents/CoppeliaSim/CoppeliaSim_Edu_V4_10_0_rev0_Ubuntu22_04/programming/zmqRemoteApi/clients/matlab');
+%addpath('/home/husain5/Documents/CoppeliaSim/CoppeliaSim_Edu_V4_10_0_rev0_Ubuntu22_04/programming/zmqRemoteApi/clients/matlab');
+%rehash toolboxcache;
+
+%% Maya
+
+addpath('C:\Program Files\CoppeliaRobotics\CoppeliaSimEdu\programming\zmqRemoteApi\clients\matlab');
 rehash toolboxcache;
+
 %%  FATIMA
 
 %addpath(genpath('C:\Program Files\CoppeliaRobotics\CoppeliaSimEdu\programming\zmqRemoteApi\clients\matlab'));
+% rehash toolboxcache;
 
-%%
 client = RemoteAPIClient();
 sim = client.require('sim');
 
