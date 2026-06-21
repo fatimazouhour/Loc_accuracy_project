@@ -26,7 +26,7 @@ else
     load('trainedANN.mat', 'ann');
 end
 
-run('ekf_ANN_fusion'); 
+run('ekf_ann_fusion'); 
 
 disp('finished.');
 %% plots
