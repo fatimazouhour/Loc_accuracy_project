@@ -43,3 +43,17 @@ for i = 1:N
         final(2, i) = a1_fuzzy * pred_pos(2) + (1 - a1_fuzzy) * kf2.pos(2, i);
     end
 end
+
+%RMSE
+rmse = @(e) sqrt(mean(sum(e.^2,1)));
+out  = ~gps_available;
+fprintf('\n=== Combined position RMSE (m) ===\n');
+if any(out)
+    fprintf('-- during GPS OUTAGE --\n');
+    fprintf('KF-2 alone : %.4f\n', rmse(truth(:,out)-kf2.pos(:,out)));
+    fprintf('ANN alone  : %.4f\n', rmse(truth(:,out)-pos_ann(:,out)));
+    fprintf('Fusion B   : %.4f   (a1_fuzzy=%.2f)\n', rmse(truth(:,out)-final(:,out)), a1_fuzzy);
+end
+fprintf('-- whole run --\n');
+fprintf('KF-2     : %.4f\n', rmse(truth-kf2.pos));
+fprintf('Fusion B : %.4f\n', rmse(truth-final));
