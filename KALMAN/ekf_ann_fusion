@@ -1,59 +1,57 @@
-% Load your trained model and the individual filter outputs
+% --- 1. Load Data ---
 load('trainedANN.mat', 'ann');
 load('kf2_output.mat', 'kf2');
-load('kf_input.mat', 'accelX_hist', 'accelY_hist', 'vx_ins_hist', ...
-     'vy_ins_hist', 'initial_heading', 'gyro_r_hist', 'odom_v_hist');
+Base = load('kf_input.mat');
 
-% Pre-allocate the final fused position arrays [cite: 237]
+% --- 2. Setup ---
 N = length(kf2.gps_available);
 final = zeros(2, N);
-dt = median(diff(time));
+pos_ann = zeros(2, N); % Needed for RMSE reporting
+truth = [Base.true_x_hist(:).'; Base.true_y_hist(:).'];
+dt = median(diff(Base.time_hist));
 
-% Calculate heading for ANN input [cite: 306]
-heading = initial_heading + cumsum(gyro_r_hist(:) * dt);
+% Heading calculation for ANN input
+heading = Base.initial_heading + cumsum(Base.gyro_r_hist(:) * dt);
 
+% --- 3. Sequential Fusion Loop ---
 for i = 1:N
     if kf2.gps_available(i)
-        % --- PHASE 1: GPS IS AVAILABLE ---
-        % Use the KF-2 (GPS + Odometer) output [cite: 132]
+        % Phase 1: GPS Available - Trust KF-2
         final(:, i) = kf2.pos(:, i);
     else
-        % --- PHASE 2: GPS IS UNAVAILABLE (Indoor/Outage) ---
-        % 1. Prepare ANN input vector [cite: 221]
-        data.accel = [accelX_hist(i), accelY_hist(i), 0];
-        data.vel = [vx_ins_hist(i), vy_ins_hist(i)];
+        % Phase 2: GPS Unavailable - ANN + FLS Fusion
+        
+        % A. Prepare input vector
+        data.accel = [Base.accelX_hist(i), Base.accelY_hist(i), 0];
+        data.vel = [Base.vx_ins_hist(i), Base.vy_ins_hist(i)];
         data.heading = heading(i);
-        data.odoVel = [odom_v_hist(i), 0];
+        data.odoVel = [Base.odom_v_hist(i), 0];
         X_test = buildANNInput(data, dt);
         
-        % 2. Predict position using the trained ANN [cite: 134, 227]
+        % B. Predict using ANN
         pred_pos = ann.predict(X_test); 
+        pos_ann(:, i) = pred_pos(:); 
         
-        % 3. Calculate Error (e) for Fuzzy System [cite: 154, 471]
-        % Error between odometer and accelerometer-based velocities
-        err = abs(odom_v_hist(i) - vx_ins_hist(i));
+        % C. Fuzzy Adaptive Weighting
+        a1_fuzzy = get_fuzzy_alpha(Base.odom_v_hist(i), Base.vx_ins_hist(i)); 
         
-        % 4. Get Dynamic alpha from FLS [cite: 135, 246]
-        % Replace with your actual get_fuzzy_alpha(err) function
-        a1_fuzzy = get_fuzzy_alpha(err); 
-        
-        % 5. Fuse using Eq. 5 [cite: 238]
-        % [x,y] = alpha_1*ANN + alpha_2*KF2
+        % D. Fuse Estimates (Eq. 5)
         final(1, i) = a1_fuzzy * pred_pos(1) + (1 - a1_fuzzy) * kf2.pos(1, i);
         final(2, i) = a1_fuzzy * pred_pos(2) + (1 - a1_fuzzy) * kf2.pos(2, i);
     end
 end
 
-%RMSE
+% --- 4. RMSE Performance Report ---
 rmse = @(e) sqrt(mean(sum(e.^2,1)));
-out  = ~gps_available;
+out  = ~kf2.gps_available;
+
 fprintf('\n=== Combined position RMSE (m) ===\n');
 if any(out)
     fprintf('-- during GPS OUTAGE --\n');
     fprintf('KF-2 alone : %.4f\n', rmse(truth(:,out)-kf2.pos(:,out)));
     fprintf('ANN alone  : %.4f\n', rmse(truth(:,out)-pos_ann(:,out)));
-    fprintf('Fusion B   : %.4f   (a1_fuzzy=%.2f)\n', rmse(truth(:,out)-final(:,out)), a1_fuzzy);
+    fprintf('Fusion B   : %.4f   (Adaptive)\n', rmse(truth(:,out)-final(:,out)));
 end
 fprintf('-- whole run --\n');
-fprintf('KF-2     : %.4f\n', rmse(truth-kf2.pos));
-fprintf('Fusion B : %.4f\n', rmse(truth-final));
+fprintf('KF-2       : %.4f\n', rmse(truth-kf2.pos));
+fprintf('Fusion B   : %.4f\n', rmse(truth-final));
