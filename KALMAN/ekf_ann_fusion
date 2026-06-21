@@ -1,0 +1,45 @@
+% Load your trained model and the individual filter outputs
+load('trainedANN.mat', 'ann');
+load('kf2_output.mat', 'kf2');
+load('kf_input.mat', 'accelX_hist', 'accelY_hist', 'vx_ins_hist', ...
+     'vy_ins_hist', 'initial_heading', 'gyro_r_hist', 'odom_v_hist');
+
+% Pre-allocate the final fused position arrays [cite: 237]
+N = length(kf2.gps_available);
+final = zeros(2, N);
+dt = median(diff(time));
+
+% Calculate heading for ANN input [cite: 306]
+heading = initial_heading + cumsum(gyro_r_hist(:) * dt);
+
+for i = 1:N
+    if kf2.gps_available(i)
+        % --- PHASE 1: GPS IS AVAILABLE ---
+        % Use the KF-2 (GPS + Odometer) output [cite: 132]
+        final(:, i) = kf2.pos(:, i);
+    else
+        % --- PHASE 2: GPS IS UNAVAILABLE (Indoor/Outage) ---
+        % 1. Prepare ANN input vector [cite: 221]
+        data.accel = [accelX_hist(i), accelY_hist(i), 0];
+        data.vel = [vx_ins_hist(i), vy_ins_hist(i)];
+        data.heading = heading(i);
+        data.odoVel = [odom_v_hist(i), 0];
+        X_test = buildANNInput(data, dt);
+        
+        % 2. Predict position using the trained ANN [cite: 134, 227]
+        pred_pos = ann.predict(X_test); 
+        
+        % 3. Calculate Error (e) for Fuzzy System [cite: 154, 471]
+        % Error between odometer and accelerometer-based velocities
+        err = abs(odom_v_hist(i) - vx_ins_hist(i));
+        
+        % 4. Get Dynamic alpha from FLS [cite: 135, 246]
+        % Replace with your actual get_fuzzy_alpha(err) function
+        a1_fuzzy = get_fuzzy_alpha(err); 
+        
+        % 5. Fuse using Eq. 5 [cite: 238]
+        % [x,y] = alpha_1*ANN + alpha_2*KF2
+        final(1, i) = a1_fuzzy * pred_pos(1) + (1 - a1_fuzzy) * kf2.pos(1, i);
+        final(2, i) = a1_fuzzy * pred_pos(2) + (1 - a1_fuzzy) * kf2.pos(2, i);
+    end
+end
