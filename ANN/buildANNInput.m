@@ -1,6 +1,6 @@
 function X_all = buildANNInput(data, dt)
 
-    %% Force correct orientation (VERY IMPORTANT)
+    %% Force correct orientation
     ax = data.accel(:,1); ax = ax(:);
     ay = data.accel(:,2); ay = ay(:);
 
