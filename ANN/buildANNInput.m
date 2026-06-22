@@ -1,32 +1,38 @@
-function [X_all] = buildANNInput(data, dt)
-    %% Number of samples
-    N = size(data.accel, 1);
+function X_all = buildANNInput(data, dt)
 
-    %% 1. Acceleration magnitude
-    acc_mag = sqrt(sum(data.accel.^2, 2));
-    %% 2. Cumulative acceleration
-    cum_acc_mag = cumsum(acc_mag) * dt;
+    %% Force correct orientation (VERY IMPORTANT)
+    ax = data.accel(:,1); ax = ax(:);
+    ay = data.accel(:,2); ay = ay(:);
 
-    %% 3. Velocity magnitude
-    vel_mag = sqrt(sum(data.vel.^2, 2));
-    %% 4. Cumulative velocity
-    cum_vel_mag = cumsum(vel_mag) * dt;
+    vx = data.vel(:,1); vx = vx(:);
+    vy = data.vel(:,2); vy = vy(:);
 
-    %% 5. Heading
     heading = data.heading(:);
-    %% 6. Cumulative heading
-    cum_heading = cumsum(heading) * dt;
 
-    %% 7. Odometer x velocity
-    vx_odo = data.odoVel(:, 1);
-    %% 8. Cumulative odometer x velocity
+    vx_odo = data.odoVel(:,1); vx_odo = vx_odo(:);
+    vy_odo = data.odoVel(:,2); vy_odo = vy_odo(:);
+
+    N = length(ax);
+
+    %% Derived features (all N×1)
+    cum_ax = cumsum(ax) * dt;
+    cum_ay = cumsum(ay) * dt;
+
+    cum_vx = cumsum(vx) * dt;
+    cum_vy = cumsum(vy) * dt;
+
     cum_vx_odo = cumsum(vx_odo) * dt;
-
-    %% 9. Odometer y velocity
-    vy_odo = data.odoVel(:, 2);
-    %% 10. Cumulative odometer y velocity
     cum_vy_odo = cumsum(vy_odo) * dt;
 
-    %% Final ANN input matrix (Corrected assignment)
-    X_all = [acc_mag, cum_acc_mag, vel_mag, cum_vel_mag, heading, cum_heading, vx_odo, cum_vx_odo, vy_odo, cum_vy_odo];
+    %% Final feature matrix (13 features)
+    X_all = [
+        ax, ay, ...
+        cum_ax, cum_ay, ...
+        vx, vy, ...
+        cum_vx, cum_vy, ...
+        heading, ...
+        vx_odo, vy_odo, ...
+        cum_vx_odo, cum_vy_odo
+    ];
+
 end
