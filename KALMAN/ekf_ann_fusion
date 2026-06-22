@@ -1,31 +1,23 @@
-%% ================================
+
 %  1. LOAD DATA
-%% ================================
+
 load('trainedANN.mat','ann');
 load('kf2_output.mat','kf2');
 Base = load('kf_input.mat');
 
-%% ================================
 %  2. SETUP
-%% ================================
+
 N = length(kf2.gps_available);
-
 gps = Base.gps_available(:);
-
 truth = [Base.true_x_hist(:).'; Base.true_y_hist(:).'];
-
 final   = zeros(2,N);
 pos_ann = NaN(2,N);
-
 dt = median(diff(Base.time_hist));
-
 heading = Base.initial_heading + cumsum(Base.gyro_r_hist(:) * dt);
-
 rmse = @(e) sqrt(mean(sum(e.^2,1),'omitnan'));
 
-%% ================================
 %  3. DETECT OUTAGE
-%% ================================
+
 out = find(~gps);
 
 if isempty(out)
@@ -33,25 +25,17 @@ if isempty(out)
     out = round(0.4*N):round(0.6*N);
 end
 
-%% ================================
 %  4. FUSION LOOP
-%% ================================
+
 alpha_hist = zeros(1,N);
 for i = 1:N
 
     if gps(i)
-
-        % =========================
         % NORMAL MODE: GPS OK
-        % =========================
         final(:,i) = kf2.pos(:,i);
 
     else
-
-        % =========================
         % OUTAGE MODE: ANN + KF
-        % =========================
-
         data.accel   = [Base.accelX_hist(i), Base.accelY_hist(i), 0];
         data.vel     = [Base.vx_ins_hist(i), Base.vy_ins_hist(i)];
         data.heading = heading(i);
@@ -91,38 +75,29 @@ for i = 1:N
 
     end
 end
-%% =========================
-% SAVE RESULTS FOR PLOTTING
-%% =========================
 
+% SAVE RESULTS FOR PLOTTING
 results.kf2     = kf2;
 results.final   = final;
 results.pos_ann = pos_ann;
 results.truth   = truth;
 results.gps     = Base.gps_available;
 results.time    = Base.time_hist;
-
 save('results.mat', 'results');
 
-%% ================================
 %  5. GLOBAL PERFORMANCE
-%% ================================
 fprintf('\n=== GLOBAL PERFORMANCE ===\n');
 fprintf('KF-2   : %.4f\n', rmse(truth - kf2.pos));
 fprintf('Fusion : %.4f\n', rmse(truth - final));
 
-%% ================================
 %  6. OUTAGE PERFORMANCE
-%% ================================
+
 fprintf('\n=== OUTAGE PERFORMANCE ===\n');
-
 fprintf('KF-2 alone : %.4f\n', rmse(truth(:,out) - kf2.pos(:,out)));
-
 if any(~isnan(pos_ann(:)))
     fprintf('ANN alone  : %.4f\n', rmse(truth(:,out) - pos_ann(:,out)));
 else
     fprintf('ANN alone  : not available\n');
 end
-
 fprintf('Fusion     : %.4f\n', rmse(truth(:,out) - final(:,out)));
 
