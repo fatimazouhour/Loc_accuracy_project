@@ -83,7 +83,7 @@ noise_gps = 0.3162;   % meters
 slip_probability = 0.05; 
 
 % --- GPS Outage Configuration ---
-% Suggestion: 20-30 seconds is standard to test filter drift and ANN recovery
+
 outage1_start = 500;
 outage1_end   = 600;
 
@@ -133,7 +133,7 @@ while sim.getSimulationTime() < simulationiteration
     %======================================================================
     %--------------------------POSITION FROM GPS---------------------------
     % --- GPS Availability Logic ---
-    % We store a true/false value for the current step_idx
+   
     if (current_time >= outage1_start && current_time <= outage1_end) || ...
             (current_time >= outage2_start && current_time <= outage2_end)
 
