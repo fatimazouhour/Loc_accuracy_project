@@ -32,7 +32,7 @@ rightMotor = sim.getObject('/PioneerP3DX/rightMotor');
 
 % Simulation Parameters
 dt = 0.05;
-simulationiteration = 1000; 
+simulationiteration = 500; 
 total_steps = ceil(simulationiteration / dt); 
 
 % ENABLE SYNCHRONOUS MODE for perfect timing
@@ -83,12 +83,11 @@ noise_gps = 0.3162;   % meters
 slip_probability = 0.05; 
 
 % --- GPS Outage Configuration ---
+outage1_start = 260;
+outage1_end   = 300;
 
-outage1_start = 500;
-outage1_end   = 600;
-
-outage2_start = 750;
-outage2_end   = 850;
+outage2_start = 400;
+outage2_end   = 470;
 
 % --- Data Logging Arrays ---
 time_hist = zeros(1, total_steps);
@@ -132,8 +131,7 @@ while sim.getSimulationTime() < simulationiteration
     %================================GPS===================================
     %======================================================================
     %--------------------------POSITION FROM GPS---------------------------
-    % --- GPS Availability Logic ---
-   
+    
     if (current_time >= outage1_start && current_time <= outage1_end) || ...
             (current_time >= outage2_start && current_time <= outage2_end)
 
