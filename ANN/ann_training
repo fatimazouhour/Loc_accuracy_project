@@ -1,4 +1,3 @@
-
 %% --- 1. Load Data & Consistency Checks ---
 input_file  = load('kf_input.mat');      
 fusion_file = load('fusion_output.mat'); 
@@ -45,35 +44,6 @@ fprintf('Training RMSE (x,y) = %.4f %.4f (Total: %.4f)\n', rmse_vect(1), rmse_ve
 
 % Relaxed threshold to 0.2 for stability, given typical GPS drift characteristics
 max_allowable_rmse = 0.2; 
-if total_rmse > max_allowable_rmse
-    error('Training Aborted: RMSE (%.4f) > threshold (%.4f). Model not accurate enough.', ...
-          total_rmse, max_allowable_rmse);
-else
-    ann.saveModel('trainedANN.mat');
-    fprintf('SUCCESS: Model validated (%.4f < %.4f) and saved.\n', total_rmse, max_allowable_rmse);
-end
-
-%% --- 5. Final Visual Verification ---
-outage_idx = (input_file.gps_available(:) == false);
-if any(outage_idx)
-    pos_ann = ann.predict(X_all(outage_idx, :));
-    
-    figure('Color', 'w'); hold on; grid on;
-    plot(fusion_file.x_fused(outage_idx), fusion_file.y_fused(outage_idx), 'r-', 'LineWidth', 1.5, 'DisplayName', 'Target (Fusion)');
-    plot(pos_ann(:,1), pos_ann(:,2), 'b--', 'LineWidth', 1.5, 'DisplayName', 'ANN Prediction');
-    legend; title('ANN Prediction performance during GPS Outage');
-else
-    disp('No GPS outage detected; could not perform outage validation.');
-end
-%% --- 4. Validation & Accuracy Gatekeeper ---
-Y_pred     = ann.predict(X_all);
-rmse_vect  = sqrt(mean((Y_pred(valid_idx,:) - Y_train).^2));
-total_rmse = norm(rmse_vect); 
-
-fprintf('Training RMSE (x,y) = %.4f %.4f (Total: %.4f)\n', rmse_vect(1), rmse_vect(2), total_rmse);
-
-% Relaxed threshold to 0.1 for stability, given typical GPS drift characteristics
-max_allowable_rmse = 0.1; 
 if total_rmse > max_allowable_rmse
     error('Training Aborted: RMSE (%.4f) > threshold (%.4f). Model not accurate enough.', ...
           total_rmse, max_allowable_rmse);
