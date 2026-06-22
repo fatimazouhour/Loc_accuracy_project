@@ -1,56 +1,128 @@
-% --- 1. Load Data ---
-load('trainedANN.mat', 'ann');
-load('kf2_output.mat', 'kf2');
+%% ================================
+%  1. LOAD DATA
+%% ================================
+load('trainedANN.mat','ann');
+load('kf2_output.mat','kf2');
 Base = load('kf_input.mat');
 
-% --- 2. Setup ---
+%% ================================
+%  2. SETUP
+%% ================================
 N = length(kf2.gps_available);
-final = zeros(2, N);
-pos_ann = zeros(2, N); % Needed for RMSE reporting
+
+gps = Base.gps_available(:);
+
 truth = [Base.true_x_hist(:).'; Base.true_y_hist(:).'];
+
+final   = zeros(2,N);
+pos_ann = NaN(2,N);
+
 dt = median(diff(Base.time_hist));
 
-% Heading calculation for ANN input
 heading = Base.initial_heading + cumsum(Base.gyro_r_hist(:) * dt);
 
-% --- 3. Sequential Fusion Loop ---
+rmse = @(e) sqrt(mean(sum(e.^2,1),'omitnan'));
+
+%% ================================
+%  3. DETECT OUTAGE
+%% ================================
+out = find(~gps);
+
+if isempty(out)
+    fprintf('\n⚠ No GPS outage detected → creating pseudo outage window\n');
+    out = round(0.4*N):round(0.6*N);
+end
+
+%% ================================
+%  4. FUSION LOOP
+%% ================================
+alpha_hist = zeros(1,N);
 for i = 1:N
-    if kf2.gps_available(i)
-        % Phase 1: GPS Available - Trust KF-2
-        final(:, i) = kf2.pos(:, i);
+
+    if gps(i)
+
+        % =========================
+        % NORMAL MODE: GPS OK
+        % =========================
+        final(:,i) = kf2.pos(:,i);
+
     else
-        % Phase 2: GPS Unavailable - ANN + FLS Fusion
-        
-        % A. Prepare input vector
-        data.accel = [Base.accelX_hist(i), Base.accelY_hist(i), 0];
-        data.vel = [Base.vx_ins_hist(i), Base.vy_ins_hist(i)];
+
+        % =========================
+        % OUTAGE MODE: ANN + KF
+        % =========================
+
+        data.accel   = [Base.accelX_hist(i), Base.accelY_hist(i), 0];
+        data.vel     = [Base.vx_ins_hist(i), Base.vy_ins_hist(i)];
         data.heading = heading(i);
-        data.odoVel = [Base.odom_v_hist(i), 0];
+        data.odoVel  = [Base.odom_v_hist(i), 0];
+
         X_test = buildANNInput(data, dt);
+
+        pred = ann.predict(X_test);
+        pred = pred(:);
+
+        pos_ann(:,i) = pred;
+
+        kf_pos = kf2.pos(:,i);
+
+        a1_fuzzy = get_fuzzy_alpha( ...
+            Base.odom_v_hist(i), ...
+            Base.vx_ins_hist(i), ...
+            abs(Base.vx_ins_hist(i) - Base.odom_v_hist(i)));
+
+        alpha_hist(i) = a1_fuzzy;
+
+        % smooth alpha over last 10 samples
+        a1_fuzzy = mean(alpha_hist(max(1,i-9):i));
+       
+        % final(:,i) = a1_fuzzy * pred + ...
+        %     (1 - a1_fuzzy) * kf_pos;
         
-        % B. Predict using ANN
-        pred_pos = ann.predict(X_test); 
-        pos_ann(:, i) = pred_pos(:); 
-        
-        % C. Fuzzy Adaptive Weighting
-        a1_fuzzy = get_fuzzy_alpha(Base.odom_v_hist(i), Base.vx_ins_hist(i)); 
-        
-        % D. Fuse Estimates (Eq. 5)
-        final(:, i) = a1_fuzzy * pred_pos(:) + (1 - a1_fuzzy) * kf2.pos(:, i);
+        w_kf = (1 - a1_fuzzy);
+
+        % weaken KF influence when sensors disagree
+        if abs(Base.vx_ins_hist(i) - Base.odom_v_hist(i)) > 0.5
+            w_kf = w_kf * 0.85;
+            a1_fuzzy=(a1_fuzzy+0.15*w_kf);
+        end
+
+        final(:,i) = a1_fuzzy * pred + w_kf * kf2.pos(:,i);
+
     end
 end
+%% =========================
+% SAVE RESULTS FOR PLOTTING
+%% =========================
 
-% --- 4. RMSE Performance Report ---
-rmse = @(e) sqrt(mean(sum(e.^2,1)));
-out  = ~kf2.gps_available;
+results.kf2     = kf2;
+results.final   = final;
+results.pos_ann = pos_ann;
+results.truth   = truth;
+results.gps     = Base.gps_available;
+results.time    = Base.time_hist;
 
-fprintf('\n=== Combined position RMSE (m) ===\n');
-if any(out)
-    fprintf('-- during GPS OUTAGE --\n');
-    fprintf('KF-2 alone : %.4f\n', rmse(truth(:,out)-kf2.pos(:,out)));
-    fprintf('ANN alone  : %.4f\n', rmse(truth(:,out)-pos_ann(:,out)));
-    fprintf('Fusion B   : %.4f   (Adaptive)\n', rmse(truth(:,out)-final(:,out)));
+save('results.mat', 'results');
+
+%% ================================
+%  5. GLOBAL PERFORMANCE
+%% ================================
+fprintf('\n=== GLOBAL PERFORMANCE ===\n');
+fprintf('KF-2   : %.4f\n', rmse(truth - kf2.pos));
+fprintf('Fusion : %.4f\n', rmse(truth - final));
+
+%% ================================
+%  6. OUTAGE PERFORMANCE
+%% ================================
+fprintf('\n=== OUTAGE PERFORMANCE ===\n');
+
+fprintf('KF-2 alone : %.4f\n', rmse(truth(:,out) - kf2.pos(:,out)));
+
+if any(~isnan(pos_ann(:)))
+    fprintf('ANN alone  : %.4f\n', rmse(truth(:,out) - pos_ann(:,out)));
+else
+    fprintf('ANN alone  : not available\n');
 end
-fprintf('-- whole run --\n');
-fprintf('KF-2       : %.4f\n', rmse(truth-kf2.pos));
-fprintf('Fusion B   : %.4f\n', rmse(truth-final));
+
+fprintf('Fusion     : %.4f\n', rmse(truth(:,out) - final(:,out)));
+
