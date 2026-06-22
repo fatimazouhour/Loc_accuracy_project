@@ -9,7 +9,7 @@ addpath(fullfile(here, 'ANN'));
 
 cd(here);
 
- run('BaseMatlab');     
+run('BaseMatlab');     
 run('ekf_gps_ins');      
 run('ekf_gps_odo');      
 run('ekf_fusion'); 
@@ -29,14 +29,155 @@ end
 run('ekf_ann_fusion'); 
 
 disp('finished.');
-%% plots
-figure; hold on; grid on; axis equal
-plot(truth(1,:),  truth(2,:),  'g-',  'LineWidth',2,   'DisplayName','Truth')
-plot(kf2.pos(1,:),kf2.pos(2,:),'b-',  'LineWidth',1,   'DisplayName','KF-2')
-plot(pos_ann(1,:),pos_ann(2,:),'-',   'Color',[.85 .33 .1],'DisplayName','ANN')
-plot(final(1,:),  final(2,:),  'k--', 'LineWidth',1.8, 'DisplayName','Fusion B (ANN+KF-2)')
-if any(out)
-    plot(truth(1,out),truth(2,out),'rx','MarkerSize',5,'DisplayName','outage truth')
+
+%% =========================
+%  LOAD RESULTS 
+
+load('results.mat')
+kf2     = results.kf2;
+final   = results.final;
+pos_ann = results.pos_ann;
+truth   = results.truth;
+gps     = results.gps;
+
+N = size(truth,2);
+t = 1:N;
+
+pos_ann(isnan(pos_ann)) = 0;
+
+kf_x = kf2.pos(1,:);
+kf_y = kf2.pos(2,:);
+
+truth_x = truth(1,:);
+truth_y = truth(2,:);
+
+fus_x = final(1,:);
+fus_y = final(2,:);
+
+ann_x = pos_ann(1,:);
+ann_y = pos_ann(2,:);
+out = find(~gps);
+
+load('results.mat','results');
+
+truth_x = results.truth(1,:);
+truth_y = results.truth(2,:);
+
+kf_x = results.kf2.pos(1,:);
+kf_y = results.kf2.pos(2,:);
+
+fus_x = results.final(1,:);
+fus_y = results.final(2,:);
+
+ann_x = results.pos_ann(1,:);
+ann_y = results.pos_ann(2,:);
+
+t = results.time(:)';
+gps = results.gps(:)';
+out = find(~gps);
+N = length(t);
+
+
+% 1. MAIN TRAJECTORY PLOT
+
+figure('Color','w');
+hold on;
+grid on;
+axis equal;
+
+plot(truth_x, truth_y, 'g-', 'LineWidth', 2);
+plot(kf_x, kf_y, 'b-', 'LineWidth', 1.5);
+plot(fus_x, fus_y, 'k--', 'LineWidth', 2);
+
+if ~isempty(out)
+    plot(truth_x(out), truth_y(out), ...
+        'rx', 'MarkerSize', 5, 'LineWidth', 1.5);
 end
-legend('Location','best'); xlabel('x (m)'); ylabel('y (m)')
-title('Fusion B (paper Eq. 5): ANN + KF-2 during GPS outage')
+
+xlabel('X (m)');
+ylabel('Y (m)');
+title('Robot Localization Results');
+
+legend('Truth','KF-2','Fusion','Outage');
+
+% 2. OUTAGE SEGMENTS ONLY
+
+if ~isempty(out)
+
+    d = diff(out);
+    starts = [1; find(d > 1) + 1];
+    ends   = [starts(2:end)-1; length(out)];
+
+    figure('Color','w');
+    hold on;
+    grid on;
+    axis equal;
+
+    for k = 1:length(starts)
+
+        idx = out(starts(k):ends(k));
+
+        plot(truth_x(idx), truth_y(idx),'g', 'LineWidth', 2);
+
+        plot(kf_x(idx), kf_y(idx),'b', 'LineWidth', 1.5);
+
+        plot(ann_x(idx), ann_y(idx),'r', 'LineWidth', 1.5);
+
+        plot(fus_x(idx), fus_y(idx), 'k', 'LineWidth', 2);
+
+    end
+
+    xlabel('X (m)');
+    ylabel('Y (m)');
+    title('GPS Outage Regions');
+
+    legend('Truth','KF','ANN','Fusion');
+
+end
+
+
+% 3. X ERROR OVER TIME
+
+kf_err_x  = kf_x  - truth_x;
+ann_err_x = ann_x - truth_x;
+fus_err_x = fus_x - truth_x;
+
+figure('Color','w');
+hold on;
+grid on;
+
+plot(t, kf_err_x,'b', 'LineWidth', 1.5);
+
+plot(t, ann_err_x,'r', 'LineWidth', 1.5);
+
+plot(t, fus_err_x,'k', 'LineWidth', 1.5);
+
+xlabel('Time (s)');
+ylabel('X Error (m)');
+title('X Position Error');
+
+legend('KF-2','ANN','Fusion');
+
+
+% 4. Y ERROR OVER TIME
+
+
+kf_err_y  = kf_y  - truth_y;
+ann_err_y = ann_y - truth_y;
+fus_err_y = fus_y - truth_y;
+
+figure('Color','w');
+hold on;
+grid on;
+
+plot(t, kf_err_y,'b', 'LineWidth', 1.5);
+
+plot(t, ann_err_y,'r', 'LineWidth', 1.5);
+
+plot(t, fus_err_y,'k', 'LineWidth', 1.5);
+
+xlabel('Time (s)');
+ylabel('Y Error (m)');
+title('Y Position Error');
+
+legend('KF-2','ANN','Fusion');
