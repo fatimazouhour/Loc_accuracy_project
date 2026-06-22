@@ -13,12 +13,13 @@ classdef RobotANN_Class < handle
             end
 
             obj.nInputs = nInputs;
-
             obj.net = feedforwardnet([10 5]);
-
             obj.net.layers{1}.transferFcn = 'logsig';
             obj.net.layers{2}.transferFcn = 'logsig';
             obj.net.layers{3}.transferFcn = 'purelin';
+
+            % obj.net.trainParam.max_fail = 20;   
+            % obj.net.trainParam.goal = 1e-10;     
             
             assert(any(strcmp(obj.net.inputs{1}.processFcns,'mapminmax')), ...
                 'Input normalization (mapminmax) missing -> logsig will saturate.');
@@ -80,11 +81,9 @@ classdef RobotANN_Class < handle
 
         function saveModel(obj, filename)
         % Save trained ANN model
-
             ann = obj;
             save(filename, 'ann');
 
         end
-
     end
 end
