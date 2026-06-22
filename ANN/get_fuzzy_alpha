@@ -1,15 +1,48 @@
-function alpha = get_fuzzy_alpha(odo_v, ins_v)
-    err = abs(odo_v - ins_v);
-    
-    % Use overlapping MFs for smoother transitions
-    mu_Zero  = trimf(err, [-0.02, 0, 0.03]);
-    mu_Small = trimf(err, [0, 0.05, 0.1]);
-    mu_Large = trimf(err, [0.07, 0.15, 0.2]); % Extend the range if error gets larger
-    
-    % COG Defuzzification
-    num = (mu_Zero * 0.2) + (mu_Small * 0.5) + (mu_Large * 0.8);
-    den = (mu_Zero + mu_Small + mu_Large + eps);
-    
+function alpha = get_fuzzy_alpha(odo_v, ins_v, ekf_err)
+
+    % 1. INPUT ERRORS
+
+    vel_err = abs(odo_v - ins_v);
+    ekf_err = abs(ekf_err);
+
+    % Limit range for stability
+    vel_err = min(vel_err, 2);
+    ekf_err = min(ekf_err, 2);
+
+    % 2. MEMBERSHIP FUNCTIONS 
+
+    mu_low_v  = trimf(vel_err,[0 0 0.3]);
+    mu_med_v  = trimf(vel_err,[0.2 0.6 1.0]);
+    mu_high_v = trimf(vel_err,[0.4 0.9 1.5]);
+
+    mu_low_e  = trimf(ekf_err,[0 0 0.3]);
+    mu_med_e  = trimf(ekf_err,[0.2 0.6 1.0]);
+    mu_high_e = trimf(ekf_err,[0.4 0.9 1.5]);
+
+    % 3. RULE BASE (OUTPUT = ANN weight α)
+
+    % KF reliable → ANN low
+    r_kf_good = mu_low_v * mu_low_e;
+
+    % transition region
+    r_mid = mu_med_v * mu_med_e;
+
+    % KF unreliable → ANN dominant
+    r_ann_bad = ...
+        (mu_high_v * mu_low_e) + ...
+        (mu_med_v  * mu_high_e) + ...
+        (mu_high_v * mu_high_e);
+
+    % 4. DEFUZZIFICATION
+    num = r_kf_good * 0.15 + r_mid * 0.55 + r_ann_bad * 0.95;
+    den = r_kf_good + r_mid + r_ann_bad + eps;
     alpha = num / den;
-    alpha = max(0, min(1, alpha));
+
+    % 5. SAFETY 
+    if vel_err > 0.6 || ekf_err > 0.6
+        alpha = 0.95;   % FORCE ANN dominance in outage
+    end
+    % 6. FINAL CONSTRAINT
+    alpha = min(max(alpha, 0.70), 0.98);
+
 end
