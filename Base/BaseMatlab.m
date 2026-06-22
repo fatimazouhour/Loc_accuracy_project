@@ -32,7 +32,7 @@ rightMotor = sim.getObject('/PioneerP3DX/rightMotor');
 
 % Simulation Parameters
 dt = 0.05;
-simulationiteration = 100; 
+simulationiteration = 1000; 
 total_steps = ceil(simulationiteration / dt); 
 
 % ENABLE SYNCHRONOUS MODE for perfect timing
@@ -84,9 +84,11 @@ slip_probability = 0.05;
 
 % --- GPS Outage Configuration ---
 % Suggestion: 20-30 seconds is standard to test filter drift and ANN recovery
-outage_start_time = 100;  % seconds
-outage_end_time = 150;    % seconds
+outage1_start = 500;
+outage1_end   = 600;
 
+outage2_start = 750;
+outage2_end   = 850;
 
 % --- Data Logging Arrays ---
 time_hist = zeros(1, total_steps);
@@ -132,13 +134,15 @@ while sim.getSimulationTime() < simulationiteration
     %--------------------------POSITION FROM GPS---------------------------
     % --- GPS Availability Logic ---
     % We store a true/false value for the current step_idx
-    if current_time >= outage_start_time && current_time <= outage_end_time
-        gps_available(step_idx) = false; % GPS is OFF for this step
-        gpsX = NaN;                      % Set GPS to NaN during outage
+    if (current_time >= outage1_start && current_time <= outage1_end) || ...
+            (current_time >= outage2_start && current_time <= outage2_end)
+
+        gps_available(step_idx) = false;
+        gpsX = NaN;
         gpsY = NaN;
+
     else
-        gps_available(step_idx) = true;  % GPS is ON for this step
-        % Generate GPS only when available
+        gps_available(step_idx) = true;
         gpsX = true_X + noise_gps * randn();
         gpsY = true_Y + noise_gps * randn();
     end
